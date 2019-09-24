@@ -2,8 +2,9 @@ package service
 
 import (
 	"bufio"
+	"strings"
 
-	os_exec "os/exec"	
+	os_exec "os/exec"
 )
 
 func startFFprobe(file *uploadRequestFile) error {
@@ -46,16 +47,22 @@ func startFFmpeg(file *uploadRequestFile, encodingInfo uploadEncodingInfo) error
 	if err != nil {
 		return err
 	}
+	defer stdout.Close()
 
 	if err = cmd.Start(); err != nil {
 		return err
 	}
 
 	scanner := bufio.NewScanner(stdout)
-	scanner.Split(bufio.ScanWords)
+	scanner.Split(bufio.ScanLines)
+	var text = ""
 	for scanner.Scan() {
 		m := scanner.Text()
-		sendProgressStatus(m, file)
+		text += m
+		if strings.Contains(m, "progress=") {
+			sendProgressStatus(text, file)
+			text = ""
+		}
 	}
 
 	if err = cmd.Wait(); err != nil {

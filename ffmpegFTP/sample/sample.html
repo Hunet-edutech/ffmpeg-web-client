@@ -37,6 +37,17 @@
         .form-control{
             padding: 5px 10px;
         }
+        .progress {
+            height: 40px !important;
+        }
+        .progressStatus {
+            height: 100% !important;
+        }
+        .p {
+            display:table-cell; 
+            text-align:center; 
+            vertical-align:middle;
+        }
     </style>
 </head>
 <body>
@@ -149,7 +160,7 @@
         var maxUploadSize = 5000;
 
         $(document).ready(function () {
-            var ws = new WebSocket("ws://localhost:5050/echo");
+            var ws = new WebSocket("ws://127.0.0.1:5050/echo");
             ws.onopen = function (event) {
             }
 
@@ -159,9 +170,10 @@
                 if( recData.progressStatus == 'end') {
                     $("#uploadStopBtn_"+recData.fileIndex).css("display","none");
                     $('#progressStatus_'+recData.fileIndex).text("전송중")
+                    $('#progressBar_'+recData.fileIndex).css('width','100%')
                 } else {
                     $('#progressBar_'+recData.fileIndex).css('width',recData.progressRate+'%')
-                    $('#progressStatus_'+recData.fileIndex).text(recData.progressRate + '%') 
+                    $('#progressStatus_'+recData.fileIndex).html(recData.progressRate + '% <br> (' + recData.timeRemaining + ' 남음)' ) 
                 }
             }
 
@@ -324,7 +336,7 @@
             html += "       <div style='display:flex; width:100%'>";
             html += "           <div class='progress' style='display:inline-block; width:100%; text-align: center; position: relative;' >";
             html += "               <div class='progress-bar progress-bar-info progress-bar-striped active' role='progressbar' aria-valuenow='50' aria-valuemin='0' aria-valuemax='100' id='progressBar_" + requestFile.fileIndex + "' style='width:0%''>";
-            html += "               </div> <div style='position:absolute; width:100%' id='progressStatus_" + requestFile.fileIndex + "'>대기중</div>";
+            html += "               </div> <div class='progressStatus' style='display:table; position:absolute; width:100%' ><p class='p' id='progressStatus_" + requestFile.fileIndex + "'>대기중</p></div>";
             html += "           </div>";
             html += "       </div>"
             html += "    </td>";

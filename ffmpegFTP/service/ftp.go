@@ -8,13 +8,12 @@ import (
 
 	"github.com/dutchcoders/goftp"
 )
-
 func connectFTP() (*goftp.FTP, error) {
 	// Connect hsftp
 	ftp, err := goftp.Connect("localhost:2121")
 	if err != nil {
 		logio.Info.Print("goftp Connect err : " + err.Error())
-		return nil, err
+		return nil , err
 	}
 
 	// defer ftp.Close()

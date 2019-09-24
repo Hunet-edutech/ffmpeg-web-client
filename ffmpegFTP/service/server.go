@@ -1,10 +1,11 @@
 package service
 
 import (
-	"strconv"
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
+
 	// "strings"
 	"path/filepath"
 
@@ -27,6 +28,7 @@ type msg struct {
 	ProgressTime   string `json:"progressTime"`
 	ProgressStatus string `json:"progressStatus"`
 	TotalTime      string `json:"totalTime"`
+	TimeRemaining  string `json:"timeRemaining"`
 	ProgressRate   string `json:"progressRate"`
 }
 
@@ -59,7 +61,7 @@ func setupResponse(w *http.ResponseWriter, req *http.Request) {
 func echo(w http.ResponseWriter, r *http.Request) {
 	// 여러개 브라우저 동시 접속시
 	initProgramStatus()
-	
+
 	var upgrader = websocket.Upgrader{}
 	upgrader.CheckOrigin = func(r *http.Request) bool {
 		return true
@@ -88,7 +90,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 
 func fileExist(w http.ResponseWriter, r *http.Request) {
 	setupResponse(&w, r)
-	
+
 	files := uploadRequestFile{}
 	files.CourseCd = r.URL.Query().Get("courseCd")
 	files.UploadFileName = r.URL.Query().Get("uploadFileName")
@@ -181,7 +183,7 @@ func transcoding(w http.ResponseWriter, r *http.Request) {
 
 func StartServer() {
 
-	basePath,_ = filepath.Abs(filepath.Dir(os.Args[0]))
+	basePath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
 
 	os.Chdir(basePath)
 	logio.Info.Print("Executable dir path : " + basePath)
@@ -191,9 +193,6 @@ func StartServer() {
 	http.HandleFunc("/serviceCheck", serviceCheck)
 	http.HandleFunc("/transcoding", transcoding)
 
-	if err := http.ListenAndServe("localhost:5050", nil); err != nil {
-		logio.Info.Print("ListenAndServe err : " + err.Error())
-	}
-
+	http.ListenAndServe("localhost:5050", nil)
 
 }

@@ -4,6 +4,15 @@
 
 A program registered in the Windows service is executed as a server, which transcodes (encodes) an video using the resources of a web client and transmits the video to a ftp server. 
 
+## Recently
+
+- Added the function to display the remaining time.
+
+## Demo
+
+![화면](https://user-images.githubusercontent.com/43510811/65397175-d78cf080-dde8-11e9-96d5-d05b8f24a0a9.png)
+
+
 ## Browsers support
 
 | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png" alt="IE / Edge" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)</br>IE / Edge | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png" alt="Chrome" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)</br>Chrome |
@@ -31,7 +40,7 @@ A program registered in the Windows service is executed as a server, which trans
     * [goftp/server](https://github.com/goftp/server) : ftp server for test
     
 
-2. Relocate ffmpeg.exe / ffprobe.exe to directory of server.go
+2. Relocate ffmpeg.exe / ffprobe.exe to directory of main.go
 
 3. Run your ftp server for testing
 
@@ -61,14 +70,15 @@ A program registered in the Windows service is executed as a server, which trans
 
     * Progress Json Data
 
-        | Field            | Description                                | Optional   |
-        | ---------------- | -------------------------------------------| ---------- |
-        | `fileIndex`      | file index                                 | no         |
-        | `fileName`       | file name                                  | yes        |
-        | `progressTime`   | current encoding time                      | yes        |
-        | `progressStatus` | current encoding status (continue / end)   | no         |
-        | `totalTime`      | file total time                            | yes        |
-        | `progressRate`   | encoding progress rate ( 00.00)            | no         |
+        | Field            | Description                                    | Optional   |
+        | ---------------- | -----------------------------------------------| ---------- |
+        | `fileIndex`      | file index                                     | no         |
+        | `fileName`       | file name                                      | yes        |
+        | `progressTime`   | current encoding time                          | yes        |
+        | `progressStatus` | current encoding status (continue / end)       | no         |
+        | `totalTime`      | file total time                                | yes        |
+        | `timeRemaining`  | encoding time emaining (일, 시/ 분, 분/초, 초) | yes        |
+        | `progressRate`   | encoding progress rate ( 00.00)                | no         |
 
 * To check a File existence of ftp server
 
@@ -167,12 +177,13 @@ A program registered in the Windows service is executed as a server, which trans
 * Due to the security issue(fakepath) on the web, the process will copy a stored data received from the web client, then encode it and send it to the ftp server.
  Therefore, this process must need to delete a stored data and encoded data on local.
 * You can stop to encoding a file, but you can't stop during uploading.
+* You can set the output directly to the ftp server during the ffmpeg encoding process, but it is not recommended.
 
 
 
-* ftp 서버의 파일 구조
+* the ftp server's file structure is
 
-        /GoTest/과목코드/순번.mp4
+        /GoTest/cource_code/cource_number.mp4
         
 ## References
 
