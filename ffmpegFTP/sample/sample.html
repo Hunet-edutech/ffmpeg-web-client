@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>FFmpeg client</title>
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"/>
+
+    <style type="text/css">
+        button {
+            cursor : pointer;
+        }
+        td, th {
+            vertical-align: middle !important;
+        }
+        .progress {
+            margin-bottom: auto !important;
+        }
+         .checkbox input[type=checkbox]{
+            margin-top: auto !important;
+            margin-bottom: auto !important;
+            position: inherit !important;
+        }
+        .dropdown-menu {
+            top : auto !important;
+        }
+
+        select {
+            width: auto !important;
+            display: inline !important; 
+            margin-right: 15px;
+        }
+        .form-control{
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <form id="form1" runat="server">        
+        <div class="container">
+            <h2 class="title" style="margin-bottom:30px">프로그램 시작</h2>
+            <div class="form-group">
+                <div style="margin-bottom: 15px">
+                    <label for="text">과목코드 : </label>
+                    <input type="text" class="text-xl-left" id="txtCourseCd"/> 
+                    <button type="button" class="btn btn-success" style="margin-left: 10px " onclick="fn_uploadFile();">업로드하기</button>
+                </div>
+                <div style="margin-bottom: 15px">
+                    <label for="text">비디오 코덱 : </label>
+                    <select class="form-control" id='selectVideoCodec'>
+                        <option>libx264</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                    </select>
+                    <label for="text">비디오 비트레이트 : </label>
+                    <select class="form-control" id='selectVideoBitrate'>
+                        <option>700k</option>
+                        <option>400k</option>
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                    </select>
+                    <label for="text">오디오 코덱 : </label>
+                    <select class="form-control" id='selectAudioCodec'>
+                        <option>aac</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                    </select>
+                    <label for="text">오디오 비트레이트 : </label>
+                    <select class="form-control" id='selectAudioBitrate'>
+                        <option>128k</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                    </select>
+                    <label for="text">해상도 : </label>
+                    <select class="form-control" id='selectResolution'>
+                        <option>970x546</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                    </select>
+                    <label for="text">확장자 : </label>
+                    <select class="form-control" id='selectExt' style="margin-right:0px">
+                        <option>.mp4</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                    </select>
+                </div>
+            </div>
+            <div style="align-items: center; margin: auto">
+                    <table class="table" style="border:2px dashed;" id="dropZone">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <div class='checkbox' style='text-align: center'>
+                                        <label>
+                                            <input type='checkbox' id='allCheck' style='width:15px; height:15px'/>
+                                        </label>
+                                    </div>
+                                </th>
+                                <th>순번</th>
+                                <th>장/절번호</th>
+                                <th>장/절명</th>
+                                <th>차시명</th>
+                                <th>확장자</th>
+                                <th>크기</th>
+                                <th style="width: 10%">진행률</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="fileTableTbody">
+                            <tr id="fileTr" style="height: 300px">
+                                <td colspan="9" style='text-align: center'>
+                                    파일을 Drag & Drop 하세요.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+            </div>       
+        </div>   
+    </form>
+
+
+
+    <!-- -----------------javascript--------------------- -->
+    <script type="text/javascript">
+        // 파일 리스트 번호
+        var fileIndex = 0;
+        // 등록할 전체 파일 사이즈
+        var totalFileSize = 0;
+        // 드래그 앤 드랍으로 input file 태그에 set 할 수 없어 임시방편.
+        var currentList = new Array();
+        // 등록 가능한 파일 사이즈 MB
+        var uploadSize = 500;
+        // 등록 가능한 총 파일 사이즈 MB
+        var maxUploadSize = 5000;
+
+        $(document).ready(function () {
+            var ws = new WebSocket("ws://localhost:5050/echo");
+            ws.onopen = function (event) {
+            }
+
+            ws.onmessage = function (event) {
+                var recData = JSON.parse(event.data);
+                console.log(recData);
+                if( recData.progressStatus == 'end') {
+                    $("#uploadStopBtn_"+recData.fileIndex).css("display","none");
+                    $('#progressStatus_'+recData.fileIndex).text("전송중")
+                } else {
+                    $('#progressBar_'+recData.fileIndex).css('width',recData.progressRate+'%')
+                    $('#progressStatus_'+recData.fileIndex).text(recData.progressRate + '%') 
+                }
+            }
+
+            // 파일 드롭 다운
+            fn_fileDropDown();
+            // 업로드 선택 
+            fn_checkUploadBox();
+        });
+
+        // 업로드 선택 
+        function fn_checkUploadBox() {
+            $("#allCheck").click(function () {
+                //만약 전체 선택 체크박스가 체크된상태일경우 
+                if ($("#allCheck").prop("checked")) {
+                    //해당화면에 전체 checkbox들을 체크해준다 
+                    $("input[name=uploadCheck]").prop("checked", true);
+                    // 전체선택 체크박스가 해제된 경우 
+                } else {
+                    //해당화면에 모든 checkbox들의 체크를해제시킨다. 
+                    $("input[name=uploadCheck]").prop("checked", false);
+                }
+            })
+        }
+
+        // 파일 드롭 다운
+        function fn_fileDropDown() {
+            var dropZone = $("#dropZone");
+            //Drag기능 
+            dropZone.on('dragenter', function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+                // 드롭다운 영역 css
+                dropZone.css('background-color', '#E3F2FC');
+            });
+            dropZone.on('dragleave', function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+                // 드롭다운 영역 css
+                dropZone.css('background-color', '#FFFFFF');
+            });
+            dropZone.on('dragover', function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+                // 드롭다운 영역 css
+                dropZone.css('background-color', '#E3F2FC');
+            });
+            dropZone.on('drop', function (e) {
+                e.preventDefault();
+                // 드롭다운 영역 css
+                dropZone.css('background-color', '#FFFFFF');
+
+                var files = e.originalEvent.dataTransfer.files;
+                if (files != null) {
+                    if (files.length < 1) {
+                        alert("폴더 업로드 불가");
+                        return;
+                    }
+                    fn_selectFile(files)
+                } else {
+                    alert("ERROR");
+                }
+            });
+        }
+
+        // 파일 선택시
+        function fn_selectFile(files) {
+            // 다중파일 등록
+            if (files != null) {
+                for (var i = 0; i < files.length; i++) {
+
+                    // 파일 이름
+                    var fileName = files[i].name;
+                    var fileNameArr = fileName.split("\.");
+                    // 확장자
+                    var ext = fileNameArr[fileNameArr.length - 1];
+                    // 순번, 명, 번호 구분
+                    var fileSplitInfo = fileNameArr[0].split("_");
+                    // 파일 사이즈(단위 :MB)
+                    var fileSize = files[i].size / 1024 / 1024;
+                    fileSize = fileSize.toFixed(2) * 1;
+
+                    if ($.inArray(ext, ['mp4', 'wmv', 'flv', 'mkv']) < 0) {
+                        // 확장자 체크
+                        alert("등록 불가 확장자");
+                        break;
+                    } else if (fileSize > uploadSize) {
+                        // 파일 사이즈 체크
+                        alert("용량 초과\n업로드 가능 용량 : " + uploadSize + " MB");
+                        break;
+                    } else if (fileSplitInfo.length != 3 && fileSplitInfo.length != 4) {
+                        alert("업로드 파일명 확인")
+                        break;
+                    } else {
+                        var requestFile = {
+                            fileIndex: fileIndex,
+                            courseCd: "",
+                            courseNo: fileSplitInfo[0],           // 순번
+                            chapterNo: fileSplitInfo[1],
+                            courseName: fileSplitInfo.length == 4 ? fileSplitInfo[2] : "",        // 장명
+                            courseDetailName: fileSplitInfo[fileSplitInfo.length - 1], // 차시명
+                            uploadFileData: files[i],
+                            uploadFileName: fileSplitInfo[0],
+                            uploadFileSize: fileSize,
+                            uploadFileExt: ext
+                        };
+
+                        if (totalFileSize == 0) {
+                            $("#fileTr").remove();
+                        }
+
+                        // 전체 파일 사이즈
+                        totalFileSize += fileSize;
+
+                        // 파일 배열에 넣기
+                        currentList[fileIndex] = requestFile;
+
+                        // 업로드 파일 목록 생성
+                        fn_addFileList(requestFile);
+
+                        // 파일 번호 증가
+                        fileIndex++;
+
+                    }
+                }
+            } else {
+                alert("ERROR");
+            }
+        }
+
+        // 업로드 파일 목록 생성
+        function fn_addFileList(requestFile) {
+            var html = "";
+            html += "<tr id='fileTr_" + requestFile.fileIndex + "'>";
+            html += "    <td>";
+            html += "       <div class='checkbox' style='text-align: center'>";
+            html += "           <label>";
+            html += "               <input type='checkbox' name='uploadCheck' id='uploadCheckbox_" + requestFile.fileIndex + "' style='width:15px; height:15px' value='" + requestFile.fileIndex + "'/>"
+            html += "           </label>"
+            html += "       </div>";
+            html += "    </td>";
+            html += "    <td>";
+            html += requestFile.courseNo;
+            html += "    </td>";
+            html += "    <td>";
+            html += requestFile.chapterNo;
+            html += "    </td>";
+            html += "    <td>";
+            html += requestFile.courseName;
+            html += "    </td>";
+            html += "    <td class='left' >";
+            html += requestFile.courseDetailName + "<a href='#' id='uploadListDelete_" + requestFile.fileIndex + "' onclick='fn_deleteFile(" + requestFile.fileIndex + "); return false;' class='btn small bg_02'>목록에서 삭제</a>";
+            html += "    <td>";
+            html += requestFile.uploadFileExt;
+            html += "    </td>";
+            html += "    </td>";
+            html += "    <td>";
+            html += requestFile.uploadFileSize + "MB ";
+            html += "    </td>";
+            html += "    <td style='padding-right:0px;padding-left:0px;'>";
+            html += "       <div style='display:flex; width:100%'>";
+            html += "           <div class='progress' style='display:inline-block; width:100%; text-align: center; position: relative;' >";
+            html += "               <div class='progress-bar progress-bar-info progress-bar-striped active' role='progressbar' aria-valuenow='50' aria-valuemin='0' aria-valuemax='100' id='progressBar_" + requestFile.fileIndex + "' style='width:0%''>";
+            html += "               </div> <div style='position:absolute; width:100%' id='progressStatus_" + requestFile.fileIndex + "'>대기중</div>";
+            html += "           </div>";
+            html += "       </div>"
+            html += "    </td>";
+            html += "    <td style='text-align: center;'>";
+            html += "       <button type='button' style='display:none;' id='uploadStopBtn_" + requestFile.fileIndex + "' class='btn btn-danger btn-xs' onclick='fn_stopUpload(" + requestFile.fileIndex + ");'>X</button>";
+            html += "    </td>";
+            html += "</tr>"
+            $('#fileTableTbody').append(html);
+        }
+
+        // 업로드 파일 삭제
+        function fn_deleteFile(fIndex) {
+            // 전체 파일 사이즈 수정
+            totalFileSize -= currentList[fIndex].fileSize;
+
+            // 파일 배열에서 삭제
+            delete currentList[fIndex];
+
+            // 업로드 파일 테이블 목록에서 삭제
+            $("#fileTr_" + fIndex).remove();
+
+            if (totalFileSize == 0) {
+                var html = "";
+                html += "<tr id='fileTr' style='height: 300px'>";
+                html += "   <td colspan='9' style='text-align: center'>";
+                html += "       파일을 Drag & Drop 하세요.";
+                html += "   </td>";
+                html += "</tr>";
+                $('#fileTableTbody').append(html);
+            }
+        }
+
+        // 파일 등록
+        function fn_uploadFile() {
+            // 등록할 파일 리스트
+            var uploadFileList = Object.keys(currentList);
+
+            // 파일이 있는지 체크
+            if (uploadFileList.length == 0) {
+                // 파일등록 경고창
+                alert("파일이 없습니다.");
+                return;
+            }
+
+            // 용량을 5000MB를 넘을 경우 업로드 불가
+            if (totalFileSize > maxUploadSize) {
+                // 파일 사이즈 초과 경고창
+                alert("총 용량 초과\n총 업로드 가능 용량 : " + maxUploadSize + " MB");
+                return;
+            }
+
+            // 과목코드 입력 체크
+            var course_cd = $("#txtCourseCd").val();
+            if (course_cd == '' || course_cd == null) {
+                alert("과목 코드를 입력하세요.")
+                return
+            }
+
+            if ($("input:checkbox[name='uploadCheck']:checked").length == 0) {
+                alert("업로드할 영상을 선택해주세요.")
+                return
+            }
+
+            if (confirm("등록 하시겠습니까?")) {
+                // 같은 순번을 같은 과목코드에 업로드할 경우
+                var sameCoureNm;
+                $("input:checkbox[name='uploadCheck']:checked").each(function() {
+                    var i = $(this).val();
+                    $("input:checkbox[name='uploadCheck']:checked").each(function() {
+                        var j = $(this).val();
+                        if(i == j) {
+                            return true;
+                        }
+
+                        if (currentList[i].courseNo == currentList[j].courseNo) {
+                            sameCoureNm = true;
+                            return false;
+                        }
+   
+                    })
+                })
+
+                if (sameCoureNm) {
+                    alert("같은 순번의 파일이 존재합니다.");
+                    return
+                }
+
+                $("input:checkbox[name='uploadCheck']:checked").each(function() {
+                    // 등록할 파일 리스트를 formData로 데이터 입력
+                    var i = $(this).val();
+                    var requestUpload = currentList[i];
+                    requestUpload.courseCd = course_cd;
+
+                    if (fn_fileExistCheck(requestUpload.uploadFileName + $("#selectExt option:selected").val(), requestUpload.courseCd) == "false") {
+                        var re = confirm(requestUpload.courseCd + "에 이미 " + requestUpload.uploadFileName + "파일이 존재합니다. \n 덮어쓰겠습니까?")
+                        if (re) {
+
+                        } else {
+                            return true;
+                        }
+                    } else if(fn_fileExistCheck(requestUpload.uploadFileName + $("#selectExt option:selected").val(), requestUpload.courseCd) != "true") {
+                        return true;
+                    }
+                    var tempName = requestUpload.uploadFileName
+
+                    requestUpload.uploadFileName += $("#selectExt option:selected").val();
+                    var formData = new FormData();
+                    formData.append("uploadFileData", requestUpload.uploadFileData);
+
+                    var json = JSON.stringify(requestUpload);
+                    formData.append("uploadFileInfo", json);
+
+                    var requestEncodingInfo = {
+                        "videoCodec": $("#selectVideoCodec option:selected").val(),
+                        "videoBitrate": $("#selectVideoBitrate option:selected").val(),
+                        "audioCodec": $("#selectAudioCodec option:selected").val(),
+                        "audioBitrate": $("#selectAudioBitrate option:selected").val(),
+                        "resolution": $("#selectResolution option:selected").val()
+                    }
+                    json = JSON.stringify(requestEncodingInfo);
+                    formData.append("uploadEncodingInfo", json);
+
+                    $("#uploadStopBtn_" + requestUpload.fileIndex).css("display", "inline");
+                    $("#uploadListDelete_" + requestUpload.fileIndex).hide();
+                    $("#uploadCheckbox_" + requestUpload.fileIndex).hide();
+                    $("#uploadCheckbox_" + requestUpload.fileIndex).prop("checked", false);
+                    $('#progressBar_' + requestUpload.fileIndex).removeClass("progress-bar-info").removeClass("progress-bar-danger").addClass("progress-bar-warning")
+                    $.ajax({
+                        url: "http://localhost:5050/transcoding",
+                        type: "POST",
+                        data: formData,
+                        processData: false,
+                        crossDomain: true,
+                        contentType: false,
+                        timeout: 3600000,
+                        success: function (result) {
+                            $("#uploadListDelete_" + requestUpload.fileIndex).show();
+                            $('#progressBar_' + requestUpload.fileIndex).removeClass("progress-bar-warning").addClass("progress-bar-success")
+                            $('#progressStatus_' + requestUpload.fileIndex).text("완료")
+                        },
+                        error: function (request, status, error) {
+                            requestUpload.uploadFileName = tempName;
+                            $("#uploadStopBtn_" + requestUpload.fileIndex).css("display", "none");
+                            $("#uploadListDelete_" + requestUpload.fileIndex).show();
+                            $("#uploadCheckbox_" + requestUpload.fileIndex).show();
+                            $("#uploadCheckbox_" + requestUpload.fileIndex).prop("checked", true);
+                            $('#progressStatus_' + requestUpload.fileIndex).text("중지됨")
+                            $('#progressBar_' + requestUpload.fileIndex).removeClass("progress-bar-warning").addClass("progress-bar-danger")
+                        //    alert("code:" + request.status + "\n" + "message:" + request.responseText + "\n" + "error:" + error);
+                        }
+                    });
+                })
+
+            }
+        }
+
+        function fn_stopUpload(idx) {
+
+            $.ajax({
+                url: "http://localhost:5050/transcoding",
+                type: "DELETE",
+                data: JSON.stringify({ "fileIndex": idx }),
+                crossDomain: true,
+                timeout: 3600000,
+                success: function (result) {
+                    $("#uploadCheckbox_" + idx).show();
+                    $("#uploadListDelete_" + idx).show();
+                    $('#progressStatus_' + idx).text("중지됨")
+                    $("#uploadStopBtn_" + idx).css("display", "none");
+                },
+                error: function (request, status, error) {
+                    $("#uploadStopBtn_" + idx).css("display", "none");
+                    $("#uploadListDelete_" + idx).show();
+                    $("#uploadCheckbox_" + idx).show();
+                    $('#progressStatus_' + idx).text("실패")
+                    $('#progressBar_' + idx).removeClass("progress-bar-warning").addClass("progress-bar-danger")
+                    alert("code:" + request.status + "\n" + "message:" + request.responseText + "\n" + "error:" + error);
+                }
+            })
+        }
+
+        function fn_fileExistCheck(fileName, course_cd) {
+            var url = "http://localhost:5050/fileExist?uploadFileName=" + fileName + "&courseCd=" + course_cd;
+            var checkResult;
+            $.ajax({
+                url: url,
+                type: "GET",
+                async: false,
+                success: function (result) {
+                    checkResult = result;
+                },
+                error: function (request, status, error) {
+                    alert("code:" + request.status + "\n" + "message:" + request.responseText + "\n" + "error:" + error);
+                }
+            });
+
+            return checkResult;
+        }
+    </script>
+</body>
+</html>
