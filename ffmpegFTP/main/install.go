@@ -11,7 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/tj3828/ffmpeg-web-client/ffmpegFTP/logio"
+	"github.com/Hunet-edutech/ffmpeg-web-client/ffmpegFTP/logio"
 	"golang.org/x/sys/windows/svc/eventlog"
 	"golang.org/x/sys/windows/svc/mgr"
 )

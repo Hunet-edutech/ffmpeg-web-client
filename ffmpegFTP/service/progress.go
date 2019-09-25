@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/tj3828/ffmpeg-web-client/ffmpegFTP/logio"
+	"github.com/Hunet-edutech/ffmpeg-web-client/ffmpegFTP/logio"
 )
 
 func sendProgressStatus(progress string, file *uploadRequestFile) error {
@@ -71,12 +71,12 @@ func secondsToTime(input int, file *msg) {
 	seconds = input % 60
 
 	if days > 0 {
-		file.TimeRemaining = strconv.Itoa(int(days)) + "일"
+		file.TimeRemaining = strconv.Itoa(int(days)) + "d"
 	} else if hours > 0 {
-		file.TimeRemaining = strconv.Itoa(int(hours)) + "시간 " + strconv.Itoa(int(minutes)) + "분"
+		file.TimeRemaining = strconv.Itoa(int(hours)) + "h " + strconv.Itoa(int(minutes)) + "m"
 	} else if minutes > 0 {
-		file.TimeRemaining = strconv.Itoa(int(minutes)) + "분 " + strconv.Itoa(int(seconds)) + "초"
+		file.TimeRemaining = strconv.Itoa(int(minutes)) + "m " + strconv.Itoa(int(seconds)) + "s"
 	} else {
-		file.TimeRemaining = strconv.Itoa(int(seconds)) + "초"
+		file.TimeRemaining = strconv.Itoa(int(seconds)) + "s"
 	}
 }

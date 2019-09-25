@@ -10,7 +10,7 @@ A program registered in the Windows service is executed as a server, which trans
 
 ## Demo
 
-![화면](https://user-images.githubusercontent.com/43510811/65397175-d78cf080-dde8-11e9-96d5-d05b8f24a0a9.png)
+![화면](https://user-images.githubusercontent.com/43510811/65562539-c1fefe80-df81-11e9-95c4-722a1ba6ac84.png)
 
 
 ## Browsers support
@@ -21,7 +21,7 @@ A program registered in the Windows service is executed as a server, which trans
 
 ## Install
 
-    go get github.com/tj3828/ffmpeg-web-client
+    go get github.com/Hunet-edutech/ffmpeg-web-client
 
 ## Run
 

@@ -12,7 +12,7 @@ import (
 	"os"
 	os_exec "os/exec"
 
-	"github.com/tj3828/ffmpeg-web-client/ffmpegFTP/logio"
+	"github.com/Hunet-edutech/ffmpeg-web-client/ffmpegFTP/logio"
 
 	"github.com/gorilla/websocket"
 )

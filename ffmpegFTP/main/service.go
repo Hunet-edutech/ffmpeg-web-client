@@ -7,8 +7,8 @@
 package main
 
 import (
-	"github.com/tj3828/ffmpeg-web-client/ffmpegFTP/logio"
-	"github.com/tj3828/ffmpeg-web-client/ffmpegFTP/service"
+	"github.com/Hunet-edutech/ffmpeg-web-client/ffmpegFTP/logio"
+	"github.com/Hunet-edutech/ffmpeg-web-client/ffmpegFTP/service"
 	"fmt"
 	"strings"
 	"time"

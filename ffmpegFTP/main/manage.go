@@ -7,7 +7,7 @@
 package main
 
 import (
-	"github.com/tj3828/ffmpeg-web-client/ffmpegFTP/logio"
+	"github.com/Hunet-edutech/ffmpeg-web-client/ffmpegFTP/logio"
 	"fmt"
 
 	"golang.org/x/sys/windows/svc"
