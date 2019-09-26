@@ -2,7 +2,7 @@
 
 [![made-with-Go](https://img.shields.io/badge/Made%20with-Go-1f425f.svg)](https://golang.org/)
 
-A program registered in the Windows service is executed as a server, which transcodes (encodes) an video using the resources of a web client and transmits the video to a ftp server. 
+This program registered in the Windows service is executed as a server, which transcodes (encodes) an video using the resources of a web client and transmits the video to a ftp server. 
 
 ## Recently
 
@@ -25,7 +25,7 @@ A program registered in the Windows service is executed as a server, which trans
 
 ## Run
 
-1. To run the program, you need to download libraries.
+1. To run the program, you need to download below libraries.
 
     #### for service
 
@@ -40,7 +40,7 @@ A program registered in the Windows service is executed as a server, which trans
     * [goftp/server](https://github.com/goftp/server) : ftp server for test
     
 
-2. Relocate ffmpeg.exe / ffprobe.exe to directory of main.go
+2. Change location of ffmpeg.exe / ffprobe.exe to directory of main.go
 
 3. Run your ftp server for testing
 
@@ -50,7 +50,7 @@ A program registered in the Windows service is executed as a server, which trans
 
         ftp > open localhost 2121
 
-5. Check your websocket connection of 'sample.html' 
+5. Check your websocket connection after openning 'sample.html'
 
 ## API Reference
 
